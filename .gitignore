@@ -2,3 +2,4 @@
 __pycache__
 *.csv
 *.pdf
+cred-test-prompt.json
