@@ -1,0 +1,6 @@
+firebase_admin==6.1.0
+openai==0.27.6
+pandas==2.0.1
+PyMuPDF==1.22.3
+Requests==2.31.0
+slack_bolt==1.18.0
