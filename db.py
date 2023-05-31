@@ -7,6 +7,12 @@ firebase_admin.initialize_app(cred)
 
 firestore_db = firestore.client()
 
+def save_user_reply(message, user_id):
+    firestore_db.collection(u'history_chat').document(f"chat_{user_id}").set({'chat': message}, merge=True )
+
+# def get_user_reply():
+   
+
 def readDB(prompt):
   doc_ref = firestore_db.collection('prompts')
   prompt_bank = doc_ref.document('prompt_bank')

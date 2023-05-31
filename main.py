@@ -98,6 +98,8 @@ def prompt_finance(ack, respond, body):
 @app.action("keyword_input")
 def keyword_input(ack, body, say):
     ack()
+    print(body)
+    user_id = body["user"]['id']
     if store_prompt != "":
         prompt = readDB(store_prompt)
         print("ini prompt", prompt)
@@ -105,7 +107,7 @@ def keyword_input(ack, body, say):
         say(f"{reply}")
         say(blocks=input_blocks, text="")
 
-    reply = chatGPT(body["actions"][0]["value"])
+    reply = chatGPT(body["actions"][0]["value"], user_id)
     say(f"{reply}")
     say(blocks=input_blocks, text="")
 
@@ -123,7 +125,9 @@ def trainWithGPT(ack, say, command):
 @app.action("train_input")
 def train_input(ack, body, say):
     ack()
+    print(body)
     say('Ditunggu ya data sedang dipelajari ⌛')
+    user_id = body["user"]['id']
     sliced_url = "/".join(body["actions"][0]["value"].split("/")[:4])
     # print(sheet_id)
     if sliced_url == "https://docs.google.com/spreadsheets":
@@ -135,7 +139,7 @@ def train_input(ack, body, say):
             index_col=False,
         )
         print(df)
-        reply = chatGPT(f"pelajari data berikut: {df}")
+        reply = chatGPT(f"pelajari data berikut: {df}", user_id)
         print("reply", reply)
         say(f"{reply}")
         say(blocks=input_blocks, text="")
@@ -156,9 +160,9 @@ def train_input(ack, body, say):
         for page in doc:
             text += page.get_text()
         print(text)
-        reply = chatGPT(f"pelajari data berikut: {text}")
+        reply = chatGPT(f"pelajari data berikut: {text}", user_id)
         print("reply", reply)
-        say("Data sudah dipelajari")
+        say(f"Data sudah dipelajari, {reply}")
         say(blocks=input_blocks, text="")
 
 
