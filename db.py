@@ -8,9 +8,18 @@ firebase_admin.initialize_app(cred)
 firestore_db = firestore.client()
 
 def save_user_reply(message, user_id):
-    firestore_db.collection(u'history_chat').document(f"chat_{user_id}").set({'chat': message}, merge=True )
+    message_history = [{"role": "system", "content": "You are a intelligent assistant."}]
+    new_message = [*message_history, message]
+    firestore_db.collection(u'history_chat').document(f"chat_{user_id}").set({"chat": firestore.ArrayUnion(new_message)}, merge=True )
 
-# def get_user_reply():
+def delete_user_reply(user_id):
+    firestore_db.collection(u'history_chat').document(f"chat_{user_id}").delete()
+
+def get_user_reply(user_id):
+    doc_ref = firestore_db.collection('history_chat')
+    doc_chat = doc_ref.document(f"chat_{user_id}")
+    doc = doc_chat.get().to_dict()
+    return doc
    
 
 def readDB(prompt):

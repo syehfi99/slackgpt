@@ -1,11 +1,16 @@
 from slack_bolt import App
-from db import readDB
+from db import readDB, delete_user_reply
 from chatgpt import chatGPT
 import pandas as pd
 import re
 import requests
 import fitz
 import os
+from dotenv import load_dotenv
+from slack_bolt.adapter.flask import SlackRequestHandler
+import chardet
+
+load_dotenv()
 
 app = App()
 
@@ -138,8 +143,8 @@ def train_input(ack, body, say):
             header=None,
             index_col=False,
         )
-        print(df)
-        reply = chatGPT(f"pelajari data berikut: {df}", user_id)
+        print(df.to_string())
+        reply = chatGPT(f"pelajari data berikut: {df.to_string()}", user_id)
         print("reply", reply)
         say(f"{reply}")
         say(blocks=input_blocks, text="")
@@ -178,6 +183,7 @@ def file_share(body, say, ack):
     file_url = body["event"]["files"][0]["url_private_download"]
     filename = os.path.basename(file_url)
     file_extension = os.path.splitext(filename)[1]
+    delete_user_reply(user_id)
     r = requests.get(file_url, stream=True, headers=headers)
     
     if file_extension == ".pdf":
@@ -190,26 +196,52 @@ def file_share(body, say, ack):
         for page in doc:
             text += page.get_text()
         print(text)
-        reply = chatGPT(f"{text_from_mention} {text}")
+        reply = chatGPT(f"{text_from_mention} {text}", user_id)
         print("reply", reply)
-        say("Data sudah dipelajari")
+        say(f"Data sudah dipelajari: {reply}")
         say(blocks=input_blocks, text="")
     elif file_extension == ".csv":
         with open(f"train_data_{user_id}{file_extension}", "wb") as file:
-            for chunk in r.iter_content():
-                if chunk:
-                    file.write(chunk)
+            file.write(r.content)
+        # rawdata = open(f"train_data_{user_id}{file_extension}", "rb").read()
+        # encoding = chardet.detect(rawdata)['encoding']
+        # print(encoding)
         df = pd.read_csv(
             f"train_data_{user_id}{file_extension}",
             header=None,
             index_col=False,
         )
-        print(df)
-        reply = chatGPT(f"{text_from_mention} {df}")
+        # print(df.to_string())
+        reply = chatGPT(f"{text_from_mention} {df.to_string()}", user_id)
         print("reply", reply)
-        say(f"{reply}")
+        say(f"Data sudah dipelajari: {reply}")
+        say(blocks=input_blocks, text="")
+
+    elif file_extension == ".xlsx":
+        with open(f"train_data_{user_id}{file_extension}", "wb") as file:
+            file.write(r.content)
+        df = pd.read_excel(
+            f"train_data_{user_id}{file_extension}",
+            header=None,
+            index_col=False,
+        )
+        # print(df.to_string())
+        reply = chatGPT(f"{text_from_mention} {df.to_string()}", user_id)
+        print("reply", reply)
+        say(f"Data sudah dipelajari: {reply}")
         say(blocks=input_blocks, text="")
 
 
-if __name__ == "__main__":
-    app.start(3000)
+from flask import Flask, request
+
+flask_app = Flask(__name__)
+handler = SlackRequestHandler(app)
+
+
+@flask_app.route("/slack/events", methods=["POST"])
+def slack_events():
+    return handler.handle(request)
+
+
+# if __name__ == "__main__":
+#     app.start(3000)
