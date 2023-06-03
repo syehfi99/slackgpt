@@ -6,3 +6,4 @@ cred-test-prompt.json
 /.vscode
 *.xlsx
 .env
+*.txt
