@@ -8,11 +8,13 @@ import fitz
 import os
 from dotenv import load_dotenv
 from slack_bolt.adapter.flask import SlackRequestHandler
-from llama_index import SimpleDirectoryReader
-from llama_index import GPTVectorStoreIndex
 from langchain.document_loaders import DirectoryLoader
-from langchain.document_loaders import TextLoader
 from langchain.document_loaders.csv_loader import CSVLoader
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.vectorstores import Chroma
+from langchain.indexes import VectorstoreIndexCreator
+from langchain.chat_models import ChatOpenAI
 
 load_dotenv()
 
@@ -291,10 +293,19 @@ def file_share(body, say, ack):
         #     say(f"Data sudah dipelajari: {reply}")
     else:
         # With LangChain
-        loader = DirectoryLoader('.docs', glob="**/*.md", loader_cls=CSVLoader)
-        docs = loader.load()
         say("Tunggu sebentar...")
-        say(f"{docs}")
+        loader = DirectoryLoader('./docs', glob="**/*.csv", use_multithreading=True, loader_cls=CSVLoader)
+        docs = loader.load()
+        index_creator = VectorstoreIndexCreator(
+            vectorstore_cls=Chroma, 
+            embedding=OpenAIEmbeddings(),
+            text_splitter=CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+        ).from_documents(docs)
+        query = text_from_mention
+        reply = index_creator.query(query, ChatOpenAI(model="gpt-3.5-turbo"), chain_type="stuff")
+        # print('index_creator', [docs])
+        # print('reply',reply)
+        say(f"{reply}")
 
 
         # With LLamaIndex
@@ -303,7 +314,7 @@ def file_share(body, say, ack):
         # query_engine = index.as_query_engine()
         # response = query_engine.query(f"{text_from_mention}")
         # say("Tunggu sebentar...")
-        # say(response)
+        # say(f"{response}")
 
         # Direct training with ChatGPT
         # reply = chatGPT(f"{text_from_mention}", user_id)
@@ -312,16 +323,16 @@ def file_share(body, say, ack):
         
 
 
-from flask import Flask, request
+# from flask import Flask, request
 
-flask_app = Flask(__name__)
-handler = SlackRequestHandler(app)
-
-
-@flask_app.route("/slack/events", methods=["POST"])
-def slack_events():
-    return handler.handle(request)
+# flask_app = Flask(__name__)
+# handler = SlackRequestHandler(app)
 
 
-# if __name__ == "__main__":
-#     app.start(3000)
+# @flask_app.route("/slack/events", methods=["POST"])
+# def slack_events():
+#     return handler.handle(request)
+
+
+if __name__ == "__main__":
+    app.start(3000)
