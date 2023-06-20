@@ -15,6 +15,7 @@ from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import Chroma
 from langchain.indexes import VectorstoreIndexCreator
 from langchain.chat_models import ChatOpenAI
+import openai
 
 load_dotenv()
 
@@ -29,14 +30,14 @@ def startingBlocks():
     for data in startingData:
         key = list(data.keys())[0]
         options = []
-        for option_value in data[key]['prompts']:
+        for option_value in data[key]["prompts"]:
             option = {
-                'text': {
-                    'type': 'plain_text',
-                    'text': option_value,
-                    'emoji': True,
+                "text": {
+                    "type": "plain_text",
+                    "text": option_value,
+                    "emoji": True,
                 },
-                'value': option_value,
+                "value": option_value,
             }
             options.append(option)
 
@@ -63,10 +64,15 @@ def startingBlocks():
                 "multiline": True,
                 "action_id": "keyword_input",
             },
-        "label": {"type": "plain_text", "text": "Masukkan keyword anda", "emoji": True},
+            "label": {
+                "type": "plain_text",
+                "text": "Masukkan keyword anda",
+                "emoji": True,
+            },
         },
     ]
     return blocks
+
 
 input_blocks = [
     {
@@ -112,6 +118,7 @@ def chatWithGPT(ack, say, command):
     ack()
     say(blocks=input_blocks, text="")
 
+
 @app.action("seo")
 def prompt_seo(ack, respond, body):
     ack()
@@ -131,37 +138,51 @@ def prompt_finance(ack, respond, body):
 @app.action("radio_pilih_prompt")
 def handle_some_action(ack, body, logger):
     ack()
-    print('radio_pilih_prompt', body, flush=True)
+    print("radio_pilih_prompt", body, flush=True)
     payload = body
-    data = payload['state']['values'] if payload and 'state' in payload and 'values' in payload['state'] else None
+    data = (
+        payload["state"]["values"]
+        if payload and "state" in payload and "values" in payload["state"]
+        else None
+    )
     radio_pilih_prompt = None
     if data:
         for key in data:
-            print('key', data, flush=True)
-            if 'radio_pilih_prompt' in data[key]:
+            print("key", data, flush=True)
+            if "radio_pilih_prompt" in data[key]:
                 radio_pilih_prompt = data[key]
                 break
 
-    print('result radio_pilih_prompt', radio_pilih_prompt['radio_pilih_prompt']['selected_option']['text']['text'], flush=True)
+    print(
+        "result radio_pilih_prompt",
+        radio_pilih_prompt["radio_pilih_prompt"]["selected_option"]["text"]["text"],
+        flush=True,
+    )
 
 
 @app.action("keyword_input")
 def keyword_input(ack, body, say):
     ack()
     print("keyword_input", body, flush=True)
-    data = body['state']['values'] if body and 'state' in body and 'values' in body['state'] else None
+    data = (
+        body["state"]["values"]
+        if body and "state" in body and "values" in body["state"]
+        else None
+    )
     radio_pilih_prompt = None
     if data:
         for key in data:
-            print('key', data, flush=True)
-            if 'radio_pilih_prompt' in data[key]:
-                radio_pilih_prompt = data[key]['radio_pilih_prompt']['selected_option']['text']['text']
+            print("key", data, flush=True)
+            if "radio_pilih_prompt" in data[key]:
+                radio_pilih_prompt = data[key]["radio_pilih_prompt"]["selected_option"][
+                    "text"
+                ]["text"]
                 break
     user_input = body["actions"][0]["value"]
     user_id = body["user"]["id"]
-    print("radio_pilih_prompt", radio_pilih_prompt, flush=True)        
-    print("user_input", user_input, flush=True)        
-    print("user_id", user_id, flush=True)        
+    print("radio_pilih_prompt", radio_pilih_prompt, flush=True)
+    print("user_input", user_input, flush=True)
+    print("user_id", user_id, flush=True)
     reply = chatGPT(f"{radio_pilih_prompt} {user_input}", user_id)
     say(f"{reply}")
     # say(blocks=input_blocks, text="")
@@ -222,117 +243,146 @@ def train_input(ack, body, say):
 
 
 @app.event("app_mention")
-def file_share(body, say, ack):
+def file_share(body, client, ack, event, say):
     ack()
-    text_from_mention = body["event"]["blocks"][0]["elements"][0]["elements"][1]['text']
-    user_id = body["event"]["blocks"][0]["elements"][0]["elements"][0]['user_id']
+    print("message", body, flush=True)
+    channel_id = event["channel"]
+    # therad_event = body["event"]
+    # thread_ts = therad_event.get("thread_ts", None) or therad_event["ts"]
+    user_id = body["event"]['user']
     try:
         file_url = body["event"]["files"][0]["url_private_download"]
     except (KeyError, IndexError):
         file_url = None
+    try:
+        url_from_mention = body["event"]["blocks"][0]["elements"][0]["elements"][2]["url"]
+    except (KeyError, IndexError):
+        url_from_mention = None
+    try:
+        text_from_mention = body["event"]["blocks"][0]["elements"][0]["elements"][1]["text"]
+    except (KeyError, IndexError):
+        text_from_mention = None
         
+    postMessage = client.chat_postMessage(channel=channel_id, text="Tunggu sebentar ya :loading:")
     # file_url = body["event"]["files"][0]["url_private_download"] | None
-    headers = {
-        "Authorization": f"Bearer {bot_token}"
-    }
+    headers = {"Authorization": f"Bearer {bot_token}"}
     if file_url != None:
         r = requests.get(file_url, stream=True, headers=headers)
         # user_id = body["event"]["files"][0]["user"]
-        # file_url = body["event"]["files"][0]["url_private_download"]
-        # filename = os.path.basename(file_url)
-        # file_extension = os.path.splitext(filename)[1]
-        # # delete_user_reply(user_id)
-        # documents = SimpleDirectoryReader('./docs').load_data()
-        # index = GPTSimpleVectorIndex(documents)
-        # response = index.query("")
-        # say(response)
-        # if file_extension == ".pdf":
-        #     say(text='Tunggu sebentar...')
-        #     with open(f"train_data_{user_id}{file_extension}", "wb") as file:
-        #         for chunk in r.iter_content():
-        #             if chunk:
-        #                 file.write(chunk)
-        #     doc = fitz.open(f"train_data_{user_id}{file_extension}")
-        #     text = ""
-        #     for page in doc:
-        #         text += page.get_text()
-        #     print(text)
-        #     reply = chatGPT(f"{text_from_mention} {text}", user_id)
-        #     print("reply", reply)
-        #     say(f"Data sudah dipelajari: {reply}")
-        # elif file_extension == ".csv":
-        #     say(text='Tunggu sebentar...')
-        #     with open(f"train_data_{user_id}{file_extension}", "wb") as file:
-        #         file.write(r.content)
-        #     # rawdata = open(f"train_data_{user_id}{file_extension}", "rb").read()
-        #     # encoding = chardet.detect(rawdata)['encoding']
-        #     # print(encoding)
-        #     df = pd.read_csv(
-        #         f"train_data_{user_id}{file_extension}",
-        #         header=None,
-        #         index_col=False,
-        #     )
-        #     # print(df.to_string())
-        #     reply = chatGPT(f"{text_from_mention} {df.to_string()}", user_id)
-        #     print("reply", reply)
-        #     say(f"Data sudah dipelajari: {reply}")
+        file_url = body["event"]["files"][0]["url_private_download"]
+        filename = os.path.basename(file_url)
+        file_extension = os.path.splitext(filename)[1]
+        if file_extension == ".pdf":
+            delete_user_reply(channel_id)
+            # client.chat_postMessage(
+            #     channel=channel_id, text="Tunggu sebentar ya :loading:"
+            # )
+            with open(f"train_data_{user_id}{file_extension}", "wb") as file:
+                for chunk in r.iter_content():
+                    if chunk:
+                        file.write(chunk)
+            doc = fitz.open(f"train_data_{user_id}{file_extension}")
+            text = ""
+            for page in doc:
+                text += page.get_text()
+            reply = chatGPT(f"{text_from_mention} {text}", channel_id)
+            client.chat_delete(channel=channel_id, ts=postMessage["ts"])
+            say(f"{reply}")
+            
+        elif file_extension == ".csv":
+            delete_user_reply(channel_id)
+            # client.chat_postMessage(
+            #     channel=channel_id, text="Tunggu sebentar ya :loading:"
+            # )
+            with open(f"train_data_{user_id}{file_extension}", "wb") as file:
+                file.write(r.content)
+            # rawdata = open(f"train_data_{user_id}{file_extension}", "rb").read()
+            # encoding = chardet.detect(rawdata)['encoding']
+            # print(encoding)
+            df = pd.read_csv(
+                f"train_data_{user_id}{file_extension}",
+                header=None,
+                index_col=False,
+                delimiter=",",
+                skipinitialspace=True,
+            )
+            reply = chatGPT(f"{text_from_mention} {df.to_string()}", channel_id)
+            client.chat_delete(channel=channel_id, ts=postMessage["ts"])
+            say(f"{reply}")
 
-        # elif file_extension == ".xlsx":
-        #     say(text='Tunggu sebentar...')
-        #     say(text='Ditunggu ya data sedang dipelajari ⌛')
-        #     with open(f"train_data_{user_id}{file_extension}", "wb") as file:
-        #         file.write(r.content)
-        #     df = pd.read_excel(
-        #         f"train_data_{user_id}{file_extension}",
-        #         header=None,
-        #         index_col=False,
-        #     )
-        #     # print(df.to_string())
-        #     reply = chatGPT(f"{text_from_mention} {df.to_string()}", user_id)
-        #     print("reply", reply)
-        #     say(f"Data sudah dipelajari: {reply}")
+        elif file_extension == ".xlsx":
+            # client.chat_postMessage(
+            #     channel=channel_id, text="Tunggu sebentar ya :loading:"
+            # )
+            delete_user_reply(channel_id)
+            with open(f"train_data_{user_id}{file_extension}", "wb") as file:
+                file.write(r.content)
+            df = pd.read_excel(
+                f"train_data_{user_id}{file_extension}",
+                header=None,
+                index_col=False,
+            )
+            reply = chatGPT(f"{text_from_mention} {df.to_string()}", channel_id)
+            client.chat_update(
+                channel=channel_id,ts=postMessage['ts'], text=f"Data sudah dipelajari: {reply}"
+            )
+        elif file_extension == ".mp4":
+            with open(f"audio_{user_id}{file_extension}", "wb") as file:
+                file.write(r.content)
+            audio_file= open(f"audio_{user_id}{file_extension}", "rb")
+            transcript = openai.Audio.transcribe("whisper-1", audio_file)
+            # print('transcript', transcript['text'], flush=True)
+            reply = chatGPT(f"{transcript['text']}", channel_id)
+            client.chat_delete(channel=channel_id, ts=postMessage["ts"])
+            say(f"{reply}")
+            # client.chat_update(channel=channel_id, ts=postMessage["ts"], text=f"{reply}")
+
     else:
         # With LangChain
-        say("Tunggu sebentar...")
-        loader = DirectoryLoader('./docs', glob="**/*.csv", use_multithreading=True, loader_cls=CSVLoader)
-        docs = loader.load()
-        index_creator = VectorstoreIndexCreator(
-            vectorstore_cls=Chroma, 
-            embedding=OpenAIEmbeddings(),
-            text_splitter=CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-        ).from_documents(docs)
-        query = text_from_mention
-        reply = index_creator.query(query, ChatOpenAI(model="gpt-3.5-turbo"), chain_type="stuff")
-        # print('index_creator', [docs])
-        # print('reply',reply)
-        say(f"{reply}")
-
+        # say("Tunggu sebentar ya :loading:")
+        # loader = DirectoryLoader('./docs', glob="**/*.csv", use_multithreading=True, loader_cls=CSVLoader)
+        # docs = loader.load()
+        # index_creator = VectorstoreIndexCreator(
+        #     vectorstore_cls=Chroma,
+        #     embedding=OpenAIEmbeddings(),
+        #     text_splitter=CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+        # ).from_documents(docs)
+        # query = text_from_mention
+        # reply = index_creator.query(query, ChatOpenAI(model="gpt-3.5-turbo"), chain_type="stuff")
+        # # print('index_creator', [docs])
+        # # print('reply',reply)
+        # say(f"{reply}")
 
         # With LLamaIndex
         # documents = SimpleDirectoryReader('./docs').load_data()
         # index = GPTVectorStoreIndex.from_documents(documents, chunk_size=1000)
         # query_engine = index.as_query_engine()
         # response = query_engine.query(f"{text_from_mention}")
-        # say("Tunggu sebentar...")
+        # say("Tunggu sebentar ya :loading:")
         # say(f"{response}")
 
-        # Direct training with ChatGPT
-        # reply = chatGPT(f"{text_from_mention}", user_id)
-        # say("Tunggu sebentar...")
-        # say(f"{reply}")
-        
+        # Direct with ChatGPT
+        # print('postMessage', postMessage["ts"], flush=True)
+        if(url_from_mention != None):
+            reply = chatGPT(f"{text_from_mention} {url_from_mention}", channel_id)
+            client.chat_delete(channel=channel_id, ts=postMessage["ts"])
+            say(f"{reply}")
+        else:
+            reply = chatGPT(f"{text_from_mention}", channel_id)
+            client.chat_delete(channel=channel_id, ts=postMessage["ts"])
+            say(f"{reply}")
 
 
-# from flask import Flask, request
+from flask import Flask, request
 
-# flask_app = Flask(__name__)
-# handler = SlackRequestHandler(app)
-
-
-# @flask_app.route("/slack/events", methods=["POST"])
-# def slack_events():
-#     return handler.handle(request)
+flask_app = Flask(__name__)
+handler = SlackRequestHandler(app)
 
 
-if __name__ == "__main__":
-    app.start(3000)
+@flask_app.route("/slack/events", methods=["POST"])
+def slack_events():
+    return handler.handle(request)
+
+
+# if __name__ == "__main__":
+#     app.start(3000)

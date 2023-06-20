@@ -8,3 +8,4 @@ cred-test-prompt.json
 .env
 *.txt
 /.chroma
+*.mp4
