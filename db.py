@@ -60,3 +60,20 @@ def readBankCollection():
     #         data_array.append({doc.id: doc.to_dict()})
 
     # return data_array
+
+
+# prompting db
+def readPromptCollection():
+    doc_ref = firestore_db.collection("prompts")
+    prompt_bank = doc_ref.document("prompts")
+    doc = prompt_bank.get().to_dict()
+    print("banks", doc, flush=True)
+    return doc
+
+
+def readPromptByName(prompt):
+    doc_ref = firestore_db.collection("prompts")
+    prompt_bank = doc_ref.document(f"prompt_{prompt}")
+    doc = prompt_bank.get().to_dict()
+    print("banks by name", doc, flush=True)
+    return doc
