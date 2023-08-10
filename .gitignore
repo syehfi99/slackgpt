@@ -9,3 +9,5 @@ cred-test-prompt.json
 *.txt
 /.chroma
 *.mp4
+/devchatgpt
+/db_chat
