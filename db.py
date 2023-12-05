@@ -3,7 +3,7 @@ from firebase_admin import credentials, firestore
 import os
 
 
-cred = credentials.Certificate("./cred-test-prompt.json")
+cred = credentials.Certificate("./cred-slackgpt.json")
 firebase_admin.initialize_app(cred)
 
 firestore_db = firestore.client()
@@ -15,17 +15,17 @@ def save_user_reply(message, user_id):
         {"role": "system", "content": f"{name_bot}, You are a intelligent assistant."}
     ]
     new_message = [*message_history, message]
-    firestore_db.collection("history_chat").document(f"chat_{user_id}").set(
+    firestore_db.collection("slackgpt_chat").document(f"chat_{user_id}").set(
         {"chat": firestore.ArrayUnion(new_message)}, merge=True
     )
 
 
 def delete_user_reply(user_id):
-    firestore_db.collection("history_chat").document(f"chat_{user_id}").delete()
+    firestore_db.collection("slackgpt_chat").document(f"chat_{user_id}").delete()
 
 
 def get_user_reply(user_id):
-    doc_ref = firestore_db.collection("history_chat")
+    doc_ref = firestore_db.collection("slackgpt_chat")
     doc_chat = doc_ref.document(f"chat_{user_id}")
     doc = doc_chat.get().to_dict()
     chats = doc.get("chat", [])
@@ -49,7 +49,7 @@ def readDB(prompt):
 
 def readBankCollection():
     data_array = []  # Array untuk menyimpan data
-    doc_ref = firestore_db.collection("prompts").stream()
+    doc_ref = firestore_db.collection("slackgpt_prompt").stream()
     for doc in doc_ref:
         data_array.append({doc.id: doc.to_dict()})
     return data_array
@@ -68,7 +68,7 @@ def readBankCollection():
 
 # prompting db
 def readPromptCollection():
-    doc_ref = firestore_db.collection("prompts")
+    doc_ref = firestore_db.collection("slackgpt_prompt")
     prompt_bank = doc_ref.document("prompts")
     doc = prompt_bank.get().to_dict()
     # print("banks", doc, flush=True)
@@ -76,7 +76,7 @@ def readPromptCollection():
 
 
 def readPromptByName(prompt):
-    doc_ref = firestore_db.collection("prompts")
+    doc_ref = firestore_db.collection("slackgpt_prompt")
     prompt_bank = doc_ref.document(f"prompt_{prompt}")
     doc = prompt_bank.get().to_dict()
     # print("banks by name", doc, flush=True)
@@ -84,7 +84,7 @@ def readPromptByName(prompt):
 
 
 def readPromptByKey(channel_name, key):
-    doc_ref = firestore_db.collection("prompts")
+    doc_ref = firestore_db.collection("slackgpt_prompt")
     prompt_bank = doc_ref.document(f"prompt_{channel_name}")
     docs = prompt_bank.get().to_dict()
 
@@ -100,7 +100,7 @@ def writePrompt(prompt_key, prompt_value, channel_name):
     new_prompt = {"key": prompt_key, "prompt": prompt_value}
     response = None
     response = (
-        firestore_db.collection("prompts")
+        firestore_db.collection("slackgpt_prompt")
         .document(f"prompt_{channel_name}")
         .update({"prompts": firestore.ArrayUnion([new_prompt])})
     )
@@ -114,7 +114,7 @@ def updatePrompt(prompt_key, new_prompt_key, prompt_value, channel_name):
         "prompt": prompt_value,
     }
 
-    doc_ref = firestore_db.collection("prompts")
+    doc_ref = firestore_db.collection("slackgtp_prompt")
     prompt_bank = doc_ref.document(f"prompt_{channel_name}")
     docs = prompt_bank.get().to_dict()
 
@@ -127,7 +127,7 @@ def updatePrompt(prompt_key, new_prompt_key, prompt_value, channel_name):
 
     response = None
     response = (
-        firestore_db.collection("prompts")
+        firestore_db.collection("slackgpt_prompt")
         .document(f"prompt_{channel_name}")
         .update({"prompts": updated_array_data})
     )
@@ -139,7 +139,7 @@ def deletePrompt(prompt_key, prompt_value, channel_name):
     data_to_delete = {"key": prompt_key, "prompt": prompt_value}
     response = None
     response = (
-        firestore_db.collection("prompts")
+        firestore_db.collection("slackgpt_prompt")
         .document(f"prompt_{channel_name}")
         .update({"prompts": firestore.ArrayRemove([data_to_delete])})
     )
