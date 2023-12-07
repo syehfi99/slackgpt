@@ -1,7 +1,7 @@
 import requests
 from db import delete_user_reply
 import fitz
-from chatgpt import chatGPT, generateImage
+from chatgpt import chatGPT, generateImage, fine_tune
 import openai
 import pandas as pd
 import os
@@ -115,6 +115,7 @@ def direct_message_to_bot(body, client, event, say, bot_token):
                 )
                 say(blocks=blocks)
             else:
+                # fine_tune(say)
                 reply = chatGPT(f"{text_from_mention}", channel_id)
                 client.chat_delete(channel=channel_id, ts=postMessage["ts"])
                 say(f"{reply}")

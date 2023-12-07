@@ -265,22 +265,22 @@ def file_share(body, client, ack, event, say):
     message_bot_with_mention(body, client, event, say, bot_token)
 
 
-from flask import Flask, request
+# from flask import Flask, request
 
-app_name = os.environ["NAME_APP"]
-flask_app = Flask(__name__)
-handler = SlackRequestHandler(app)
-
-
-@flask_app.route("/")
-def index():
-    return f"<h1>Ascending SlackGPT Bot for {app_name}</h1>"
+# app_name = os.environ["NAME_APP"]
+# flask_app = Flask(__name__)
+# handler = SlackRequestHandler(app)
 
 
-@flask_app.route(f"/slack/events", methods=["POST"])
-def slack_events():
-    return handler.handle(request)
+# @flask_app.route("/")
+# def index():
+#     return f"<h1>Ascending SlackGPT Bot for {app_name}</h1>"
 
 
-# if __name__ == "__main__":
-#     app.start(3000)
+# @flask_app.route(f"/slack/events", methods=["POST"])
+# def slack_events():
+#     return handler.handle(request)
+
+
+if __name__ == "__main__":
+    app.start(3000)
