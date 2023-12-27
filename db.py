@@ -21,6 +21,14 @@ def save_user_reply(message, user_id):
         {"chat": firestore.ArrayUnion(new_message)}, merge=True
     )
 
+def save_ft_model(model, id):
+    firestore_db.collection("ft_model_gpt").document(f"ft_model_{id}").set({"model": model})
+
+def get_ft_model(id):
+    ft_doc = firestore_db.collection("ft_model_gpt").document(f"ft_model_{id}").get().to_dict()
+    doc_model = ft_doc.get("model")
+    return doc_model
+
 
 def delete_user_reply(user_id):
     firestore_db.collection("slackgpt_chat").document(f"chat_{user_id}").delete()

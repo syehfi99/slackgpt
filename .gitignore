@@ -11,3 +11,4 @@ cred-test-prompt.json
 *.mp4
 /devchatgpt
 /db_chat
+/data

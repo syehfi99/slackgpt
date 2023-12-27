@@ -1,12 +1,15 @@
 import requests
 from db import delete_user_reply
 import fitz
-from chatgpt import chatGPT, generateImage, fine_tune
+from chatgpt import chatGPT, generateImage, fine_tune, search_reviews, get_embed_dataset
 import openai
 import pandas as pd
 import os
 from block_kit_generator import generateImageBlocks
 import json
+import numpy as np
+from ast import literal_eval
+from time import sleep
 
 
 def direct_message_to_bot(body, client, event, say, bot_token):
@@ -54,19 +57,20 @@ def direct_message_to_bot(body, client, event, say, bot_token):
             say(f"{reply}")
 
         elif file_extension == ".csv":
-            delete_user_reply(channel_id)
+            # delete_user_reply(channel_id)
             with open(f"train_data_{user_id}{file_extension}", "wb") as file:
                 file.write(r.content)
             df = pd.read_csv(
                 f"train_data_{user_id}{file_extension}",
-                header=None,
-                index_col=False,
-                delimiter=",",
-                skipinitialspace=True,
+                # header=None,
+                # index_col=False,
+                # delimiter=",",
+                # skipinitialspace=True,
             )
-            reply = chatGPT(f"{text_from_mention} {df.to_string()}", channel_id)
-            client.chat_delete(channel=channel_id, ts=postMessage["ts"])
-            say(f"{reply}")
+            fine_tune(say, channel_id, df=df)
+            # reply = chatGPT(f"{text_from_mention} {df.to_string()}", channel_id)
+            # client.chat_delete(channel=channel_id, ts=postMessage["ts"])
+            # say(f"{reply}")
 
         elif file_extension == ".xlsx":
             delete_user_reply(channel_id)
@@ -115,7 +119,18 @@ def direct_message_to_bot(body, client, event, say, bot_token):
                 )
                 say(blocks=blocks)
             else:
-                # fine_tune(say)
-                reply = chatGPT(f"{text_from_mention}", channel_id)
-                client.chat_delete(channel=channel_id, ts=postMessage["ts"])
-                say(f"{reply}")
+                # get_embed_dataset(say)
+                # say('sleep 10s')
+                # sleep(10)
+                datafile_path = "data/fine_food_reviews_with_embeddings_1k.csv"
+
+                df = pd.read_csv(datafile_path)
+                df["embedding"] = df.embedding.apply(literal_eval).apply(np.array)
+                results = search_reviews(df, "delicious beans", say, n=3)
+                say(f"{results}")
+                # get_embeddings()
+                # embeddings_text(f"{text_from_mention}")
+                # delete_fine_tune("ft:gpt-3.5-turbo-0613:arkademi-tech:ft-arkademi-gpt-01:8T5Lk9Vj")
+                # reply = chatGPT(f"{text_from_mention}", channel_id)
+                # client.chat_delete(channel=channel_id, ts=postMessage["ts"])
+                # say(f"{reply}")
