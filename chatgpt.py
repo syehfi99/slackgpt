@@ -11,12 +11,16 @@ from sklearn.decomposition import PCA
 # from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 from sklearn.decomposition import PCA
+import chromadb
+from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction
+import uuid
 
 
 
 load_dotenv()
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
+chroma_client = chromadb.Client()
 # messages = []
 # message_history = [{"role": "system", "content": "You are a intelligent assistant."}]
 embeddings_temp=[]
@@ -105,13 +109,33 @@ def fine_tune(say, id, df):
 def delete_fine_tune(ft_id):
     openai.Model.delete(ft_id)
 
-def embeddings_text(message):
-    response = openai.Embedding.create(
+def embeddings_text(message, text):
+    input_embeding = openai.Embedding.create(
         input=message,
         model="text-embedding-ada-002"
     )
-    print(response.data[0].embedding, flush=True)
-    embeddings_temp.append(response.data[0].embedding)
+    text_embeding = openai.Embedding.create(
+        input=text,
+        model="text-embedding-ada-002"
+    )
+    embedding_function = OpenAIEmbeddingFunction(api_key=os.environ.get('OPENAI_API_KEY'), model_name="text-embedding-ada-002")
+    collection = chroma_client.get_or_create_collection(name="gpt_embed", embedding_function=embedding_function)
+    collection.add(
+        documents=[message],
+        embeddings=[input_embeding.data[0].embedding],
+        ids=[str(uuid.uuid4())]
+    )
+
+def from_chromadb(text):
+    split_text = text.split()
+    embedding_function = OpenAIEmbeddingFunction(api_key=os.environ.get('OPENAI_API_KEY'), model_name="text-embedding-ada-002")
+    collection = chroma_client.get_collection(name="gpt_embed", embedding_function=embedding_function)
+    results = collection.query(
+        query_texts=[text],
+        where_document={"$contains": text},
+        n_results=5
+    )
+    return results["documents"][0][0]
 
 def get_embeddings():
     input_embeding = openai.Embedding.create(

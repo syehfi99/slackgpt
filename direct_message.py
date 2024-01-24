@@ -1,7 +1,7 @@
 import requests
 from db import delete_user_reply
 import fitz
-from chatgpt import chatGPT, generateImage, fine_tune, search_reviews, get_embed_dataset
+from chatgpt import chatGPT, generateImage, fine_tune, search_reviews, get_embed_dataset, embeddings_text, from_chromadb
 import openai
 import pandas as pd
 import os
@@ -122,15 +122,17 @@ def direct_message_to_bot(body, client, event, say, bot_token):
                 # get_embed_dataset(say)
                 # say('sleep 10s')
                 # sleep(10)
-                datafile_path = "data/fine_food_reviews_with_embeddings_1k.csv"
+                # datafile_path = "data/fine_food_reviews_with_embeddings_1k.csv"
 
-                df = pd.read_csv(datafile_path)
-                df["embedding"] = df.embedding.apply(literal_eval).apply(np.array)
-                results = search_reviews(df, "delicious beans", say, n=3)
-                say(f"{results}")
+                # df = pd.read_csv(datafile_path)
+                # df["embedding"] = df.embedding.apply(literal_eval).apply(np.array)
+                # results = search_reviews(df, "delicious beans", say, n=3)
+                # say(f"{results}")
                 # get_embeddings()
-                # embeddings_text(f"{text_from_mention}")
                 # delete_fine_tune("ft:gpt-3.5-turbo-0613:arkademi-tech:ft-arkademi-gpt-01:8T5Lk9Vj")
-                # reply = chatGPT(f"{text_from_mention}", channel_id)
-                # client.chat_delete(channel=channel_id, ts=postMessage["ts"])
+                reply = chatGPT(f"{text_from_mention}", channel_id)
+                client.chat_delete(channel=channel_id, ts=postMessage["ts"])
                 # say(f"{reply}")
+                embeddings_text(text=f"{text_from_mention}", message=f"{reply}")
+                embed = from_chromadb(f"{text_from_mention}")
+                say(f"{embed}")
