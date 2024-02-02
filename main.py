@@ -1,4 +1,5 @@
 from slack_bolt import App
+from api.embeddings import embeddings_text_api
 from db import (
     readPromptCollection,
     readPromptByName,
@@ -265,22 +266,35 @@ def file_share(body, client, ack, event, say):
     message_bot_with_mention(body, client, event, say, bot_token)
 
 
-# from flask import Flask, request
+from flask import Flask, request, jsonify, make_response
+from flask_cors import CORS
 
-# app_name = os.environ["NAME_APP"]
-# flask_app = Flask(__name__)
-# handler = SlackRequestHandler(app)
-
-
-# @flask_app.route("/")
-# def index():
-#     return f"<h1>Ascending SlackGPT Bot for {app_name}</h1>"
+app_name = os.environ["NAME_APP"]
+flask_app = Flask(__name__)
+handler = SlackRequestHandler(app)
+CORS(flask_app)
 
 
-# @flask_app.route(f"/slack/events", methods=["POST"])
-# def slack_events():
-#     return handler.handle(request)
+@flask_app.route("/")
+def index():
+    return f"<h1>Ascending SlackGPT Bot for {app_name}</h1>"
 
 
-if __name__ == "__main__":
-    app.start(3000)
+@flask_app.route(f"/slack/events", methods=["POST"])
+def slack_events():
+    return handler.handle(request)
+
+@flask_app.route("/train-embed", methods=["POST"])
+def embed():
+    data = request.files.get("files")
+    collection = request.form.get("collection")
+    if (data == None):
+        return jsonify({'status': 500, 'message': "Data not found"})
+    else:
+        stream = data.read()
+        text = embeddings_text_api(stream, collection)
+        return jsonify({'status': 200, 'message': "Berhasil menyimpan data embedding"})
+
+
+# if __name__ == "__main__":
+#     app.start(3000)

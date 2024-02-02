@@ -20,6 +20,7 @@ import uuid
 load_dotenv()
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
+# chroma_client = chromadb.PersistentClient(path="./data/chromadb")
 chroma_client = chromadb.Client()
 # messages = []
 # message_history = [{"role": "system", "content": "You are a intelligent assistant."}]
@@ -109,13 +110,9 @@ def fine_tune(say, id, df):
 def delete_fine_tune(ft_id):
     openai.Model.delete(ft_id)
 
-def embeddings_text(message, text):
+def embeddings_text(message):
     input_embeding = openai.Embedding.create(
         input=message,
-        model="text-embedding-ada-002"
-    )
-    text_embeding = openai.Embedding.create(
-        input=text,
         model="text-embedding-ada-002"
     )
     embedding_function = OpenAIEmbeddingFunction(api_key=os.environ.get('OPENAI_API_KEY'), model_name="text-embedding-ada-002")
@@ -129,13 +126,18 @@ def embeddings_text(message, text):
 def from_chromadb(text):
     split_text = text.split()
     embedding_function = OpenAIEmbeddingFunction(api_key=os.environ.get('OPENAI_API_KEY'), model_name="text-embedding-ada-002")
-    collection = chroma_client.get_collection(name="gpt_embed", embedding_function=embedding_function)
+    collection = chroma_client.get_collection(name="testembed", embedding_function=embedding_function)
     results = collection.query(
         query_texts=[text],
         where_document={"$contains": text},
         n_results=5
     )
-    return results["documents"][0][0]
+    documents = results["documents"][0]
+    # print(documents, flush=True)
+    if not documents:
+        return None
+    else:
+        return documents[0]
 
 def get_embeddings():
     input_embeding = openai.Embedding.create(

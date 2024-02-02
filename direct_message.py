@@ -51,10 +51,12 @@ def direct_message_to_bot(body, client, event, say, bot_token):
             text = ""
             for page in doc:
                 text += page.get_text()
-            reply = chatGPT(f"{text_from_mention} {text}", channel_id)
 
-            client.chat_delete(channel=channel_id, ts=postMessage["ts"])
-            say(f"{reply}")
+            embeddings_text(message=f"{text}")
+            # reply = chatGPT(f"{text_from_mention} {text}", channel_id)
+
+            # client.chat_delete(channel=channel_id, ts=postMessage["ts"])
+            # say(f"{reply}")
 
         elif file_extension == ".csv":
             # delete_user_reply(channel_id)
@@ -67,7 +69,8 @@ def direct_message_to_bot(body, client, event, say, bot_token):
                 # delimiter=",",
                 # skipinitialspace=True,
             )
-            fine_tune(say, channel_id, df=df)
+            embeddings_text(message=f"{df.to_string()}")
+            # fine_tune(say, channel_id, df=df)
             # reply = chatGPT(f"{text_from_mention} {df.to_string()}", channel_id)
             # client.chat_delete(channel=channel_id, ts=postMessage["ts"])
             # say(f"{reply}")
@@ -81,12 +84,13 @@ def direct_message_to_bot(body, client, event, say, bot_token):
                 header=None,
                 index_col=False,
             )
-            reply = chatGPT(f"{text_from_mention} {df.to_string()}", channel_id)
-            client.chat_update(
-                channel=channel_id,
-                ts=postMessage["ts"],
-                text=f"Data sudah dipelajari: {reply}",
-            )
+            embeddings_text(message=f"{df.to_string()}")
+            # reply = chatGPT(f"{text_from_mention} {df.to_string()}", channel_id)
+            # client.chat_update(
+            #     channel=channel_id,
+            #     ts=postMessage["ts"],
+            #     text=f"Data sudah dipelajari: {reply}",
+            # )
         elif file_extension == ".mp4":
             with open(f"audio_{user_id}{file_extension}", "wb") as file:
                 file.write(r.content)
@@ -130,9 +134,16 @@ def direct_message_to_bot(body, client, event, say, bot_token):
                 # say(f"{results}")
                 # get_embeddings()
                 # delete_fine_tune("ft:gpt-3.5-turbo-0613:arkademi-tech:ft-arkademi-gpt-01:8T5Lk9Vj")
-                reply = chatGPT(f"{text_from_mention}", channel_id)
-                client.chat_delete(channel=channel_id, ts=postMessage["ts"])
+                # reply = chatGPT(f"{text_from_mention}", channel_id)
+                # client.chat_delete(channel=channel_id, ts=postMessage["ts"])
                 # say(f"{reply}")
-                embeddings_text(text=f"{text_from_mention}", message=f"{reply}")
                 embed = from_chromadb(f"{text_from_mention}")
-                say(f"{embed}")
+                if embed == None:
+                    reply = chatGPT(f"{text_from_mention}", channel_id)
+                    client.chat_delete(channel=channel_id, ts=postMessage["ts"])
+                    say(f"{reply}")
+                    print("dari chatgpt", flush=True)
+                    embeddings_text(text=f"{text_from_mention}", message=f"{reply}")
+                else:
+                    print("dari chroma", flush=True)
+                    say(f"{embed}")
