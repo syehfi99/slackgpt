@@ -20,7 +20,7 @@ import uuid
 load_dotenv()
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
-collection = os.environ["COLLECTION"]
+collections = os.environ["COLLECTION"]
 chroma_client = chromadb.PersistentClient(path="./data/chromadb")
 # chroma_client = chromadb.Client()
 # messages = []
@@ -117,7 +117,7 @@ def embeddings_text(message):
         model="text-embedding-ada-002"
     )
     embedding_function = OpenAIEmbeddingFunction(api_key=os.environ.get('OPENAI_API_KEY'), model_name="text-embedding-ada-002")
-    collection = chroma_client.get_or_create_collection(name="gpt_embed", embedding_function=embedding_function)
+    collection = chroma_client.get_or_create_collection(name=f"{collections}", embedding_function=embedding_function)
     collection.add(
         documents=[message],
         embeddings=[input_embeding.data[0].embedding],
@@ -127,7 +127,7 @@ def embeddings_text(message):
 def from_chromadb(text):
     split_text = text.split()
     embedding_function = OpenAIEmbeddingFunction(api_key=os.environ.get('OPENAI_API_KEY'), model_name="text-embedding-ada-002")
-    collection = chroma_client.get_collection(name="testembed", embedding_function=embedding_function)
+    collection = chroma_client.get_collection(name=f"{collections}", embedding_function=embedding_function)
     results = collection.query(
         query_texts=[text],
         where_document={"$contains": text},
