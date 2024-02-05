@@ -13,7 +13,8 @@ from api.reformat_text import reformat_text
 load_dotenv()
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
-chroma_client = chromadb.Client()
+chroma_client = chromadb.PersistentClient(path="./data/chromadb")
+# chroma_client = chromadb.Client()
 
 
 def embeddings_text_api(files, collection):

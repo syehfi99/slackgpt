@@ -20,8 +20,9 @@ import uuid
 load_dotenv()
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
-# chroma_client = chromadb.PersistentClient(path="./data/chromadb")
-chroma_client = chromadb.Client()
+collection = os.environ["COLLECTION"]
+chroma_client = chromadb.PersistentClient(path="./data/chromadb")
+# chroma_client = chromadb.Client()
 # messages = []
 # message_history = [{"role": "system", "content": "You are a intelligent assistant."}]
 embeddings_temp=[]
