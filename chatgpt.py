@@ -33,7 +33,7 @@ def chatGPT(message, user_id):
         # message_history.append(
         #     {"role": "user", "content": message},
         # )
-        ft_model = get_ft_model(user_id)
+        # ft_model = get_ft_model(user_id)
         save_user_reply({"role": "user", "content": message}, user_id)
         chat_db = get_user_reply(user_id)
         encoding = tiktoken.encoding_for_model("gpt-3.5-turbo-0613")
@@ -44,7 +44,7 @@ def chatGPT(message, user_id):
         print("num_tokens", num_token, flush=True)
         if num_token < 4096:
             chat = openai.ChatCompletion.create(
-                model=f"{ft_model or 'gpt-3.5-turbo-0o613' }", messages=chat_db, temperature=0
+                model="gpt-3.5-turbo-0613", messages=chat_db, temperature=0
             )
             reply = chat.choices[0].message.content
             save_user_reply({"role": "assistant", "content": reply}, user_id)
