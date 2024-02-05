@@ -143,7 +143,7 @@ def direct_message_to_bot(body, client, event, say, bot_token):
                     client.chat_delete(channel=channel_id, ts=postMessage["ts"])
                     say(f"{reply}")
                     print("dari chatgpt", flush=True)
-                    embeddings_text(text=f"{text_from_mention}", message=f"{reply}")
+                    # embeddings_text(message=f"{reply}")
                 else:
                     print("dari chroma", flush=True)
                     say(f"{embed}")
