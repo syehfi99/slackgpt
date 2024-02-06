@@ -293,6 +293,7 @@ def embed():
     else:
         stream = data.read()
         text = embeddings_text_api(stream, collection)
+        print("text api", text)
         return jsonify({'status': 200, 'message': "Berhasil menyimpan data embedding"})
 
 

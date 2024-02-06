@@ -36,3 +36,5 @@ def embeddings_text_api(files, collection):
         embeddings=[input_embeding.data[0].embedding],
         ids=[str(uuid.uuid4())]
     )
+
+    return format_text

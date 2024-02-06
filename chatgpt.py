@@ -131,10 +131,10 @@ def from_chromadb(text):
     results = collection.query(
         query_texts=[text],
         where_document={"$contains": text},
-        n_results=5
+        # n_results=5
     )
     documents = results["documents"][0]
-    # print(documents, flush=True)
+    print(documents, flush=True)
     if not documents:
         return None
     else:
