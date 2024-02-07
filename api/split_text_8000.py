@@ -3,7 +3,7 @@ def split_text_8000(text, max_tokens):
     embedding_encoding = "cl100k_base"
     encoding = tiktoken.get_encoding(embedding_encoding)
     tokens = len(encoding.encode(text))
-    if len(tokens) <= max_tokens:
+    if tokens <= max_tokens:
         return [text]
     else:
         split_texts = []
