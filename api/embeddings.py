@@ -6,9 +6,9 @@ from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction
 import uuid
 from PyPDF2 import PdfReader
 import io
-import tiktoken
 
 from api.reformat_text import reformat_text
+from api.split_text_8000 import split_text_8000
 
 
 load_dotenv()
@@ -17,24 +17,6 @@ openai.api_key = os.environ["OPENAI_API_KEY"]
 chroma_client = chromadb.PersistentClient(path="./data/chromadb")
 # chroma_client = chromadb.Client()
 
-def split_text(text, max_tokens):
-    tokens = tiktoken.tokenize(text)
-    if len(tokens) <= max_tokens:
-        return [text]
-    else:
-        split_texts = []
-        current_text = ""
-        current_tokens = 0
-        for token in tokens:
-            if current_tokens + token.count(" ") <= max_tokens:
-                current_text += token
-                current_tokens += token.count(" ")
-            else:
-                split_texts.append(current_text)
-                current_text = token
-                current_tokens = token.count(" ")
-        split_texts.append(current_text)
-        return split_texts
 
 
 def embeddings_text_api(files, collection):
@@ -44,7 +26,7 @@ def embeddings_text_api(files, collection):
     for index, pdf_page in enumerate(pdf_reader.pages):
         text += pdf_page.extract_text()
 
-    split_texts = split_text(text, 8000)
+    split_texts = split_text_8000(text, 8000)
     format_text = ""
     for split_text in split_texts:
         format_text += reformat_text(split_text)
