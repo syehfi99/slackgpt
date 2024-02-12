@@ -14,7 +14,7 @@ def reformat_text(text):
 
 def reformat_text_by_chatgpt(teks):
     result = openai.ChatCompletion.create(
-    model="gpt-4-0125-preview",
+    model="gpt-3.5-turbo-0613",
     temperature=1,
     messages=[
             {"role": "system", "content": "You are a helpful assistant."},
