@@ -1,4 +1,5 @@
 import requests
+from api.reformat_text import reformat_text_by_chatgpt
 from db import delete_user_reply
 import fitz
 from chatgpt import chatGPT, generateImage, fine_tune, search_reviews, get_embed_dataset, embeddings_text, from_chromadb
@@ -145,5 +146,7 @@ def direct_message_to_bot(body, client, event, say, bot_token):
                     print("dari chatgpt", flush=True)
                     # embeddings_text(message=f"{reply}")
                 else:
-                    print("dari chroma", flush=True)
-                    say(f"{embed}")
+                    # print("dari chroma", flush=True)
+                    format_text = reformat_text_by_chatgpt(embed)
+                    # say("embed \n" f"{embed}")
+                    say(f"{format_text}")
